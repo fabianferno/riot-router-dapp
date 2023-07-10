@@ -1,0 +1,96 @@
+{
+  "data": [
+    {
+      "data": {
+        "createdDate": "2023-06-18T14:42:11.145Z",
+        "deviceId": "0x0cfecb5D359E6C59ABd1d2Aa794F52C15055f451",
+        "id": "01H37F9MJ8BQBAWPPFYHMBD64D",
+        "sensorValue": "7832"
+      },
+      "block": {
+        "hash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "data": {
+        "createdDate": "2023-06-18T14:42:23.738Z",
+        "deviceId": "0x0cfecb5D359E6C59ABd1d2Aa794F52C15055f451",
+        "id": "01H37FA0VTGJCCSMA04G1A3AY5",
+        "sensorValue": "223"
+      },
+      "block": {
+        "hash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "data": {
+        "createdDate": "2023-06-18T14:42:29.016Z",
+        "deviceId": "0x0cfecb5D359E6C59ABd1d2Aa794F52C15055f451",
+        "id": "01H37FA60RWEG2VXRPJM7Y3AYD",
+        "sensorValue": "5645"
+      },
+      "block": {
+        "hash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "data": {
+        "createdDate": "2023-06-18T14:42:34.402Z",
+        "deviceId": "0x0cfecb5D359E6C59ABd1d2Aa794F52C15055f451",
+        "id": "01H37FAB927TBGSYCY4B5Y94N2",
+        "sensorValue": "876"
+      },
+      "block": {
+        "hash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "data": {
+        "createdDate": "2023-06-18T14:43:02.737Z",
+        "deviceId": "0x0cfecb5D359E6C59ABd1d2Aa794F52C15055f451",
+        "id": "01H37FB6YH253DY8H93AT8HC63",
+        "sensorValue": "12"
+      },
+      "block": {
+        "hash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "data": {
+        "createdDate": "2023-06-18T14:43:09.475Z",
+        "deviceId": "0x0cfecb5D359E6C59ABd1d2Aa794F52C15055f451",
+        "id": "01H37FBDH3E83925T68RW0A7QV",
+        "sensorValue": "43"
+      },
+      "block": {
+        "hash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "data": {
+        "createdDate": "2023-06-18T14:47:14.088Z",
+        "deviceId": "0x0cfecb5D359E6C59ABd1d2Aa794F52C15055f451",
+        "id": "01H37FJWD8PH56Y20YAYYR1D12",
+        "sensorValue": "43"
+      },
+      "block": {
+        "hash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "data": {
+        "createdDate": "2023-06-15T15:41:01.972Z",
+        "deviceId": "89as0aphscuanscaisha",
+        "id": "nasoubahsbas8ahd8ahsdasd",
+        "sensorValue": "7832"
+      },
+      "block": {
+        "hash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    }
+  ],
+  "cursor": {
+    "before": "AgFQEiB9lYz0KZrMkrzddXjflIAQ3MepOZp8Y5XG6q+zih1lOAEAABsABDAxSDM3RjlNSjhCUUJBV1BQRllITUJENjRE",
+    "after": "AgFQEiB9lYz0KZrMkrzddXjflIAQ3MepOZp8Y5XG6q+zih1lOAEAABkABG5hc291YmFoc2JhczhhaGQ4YWhzZGFzZA=="
+  }
+}
