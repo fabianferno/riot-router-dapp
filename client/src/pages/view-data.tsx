@@ -64,6 +64,7 @@ const ViewDataPage = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { chain } = useNetwork();
   const { address } = useAccount();
+
   useEffect(() => {
     // Make a axios get call
     (async () => {
@@ -132,43 +133,36 @@ const ViewDataPage = () => {
     if (chain.id != 80001) {
     } else {
     }
-    // const riotKeyHex = await contractCall(
-    //   zkEVMContractAddress,
-    //   currentAccount,
-    //   zkEVMABI,
-    //   [deviceId],
-    //   0,
-    //   'generateRiotKeyForSubscriber(address)',
-    //   true,
-    // );
-    // // console.log('generateRiotKeyForSubscriber: ', riotKeyHex);
-    // // const riotKeyBytes = Buffer.from(riotKeyHex.slice(2), 'hex');
-    // // const subscriberRiotKey = riotKeyBytes.toString('hex');
-    // // console.log('Riot Key Hex: ', riotKeyHex);
-    // // console.log('Riot Key Bytes: ', riotKeyBytes);
-    // // console.log('Subscriber Riot Key: ', subscriberRiotKey);
 
-    // // setRiotKey(subscriberRiotKey);
-    // // setLoading(false);
+    let riotKeyHex: any = mumbaiRiotKey;
+    console.log('generateRiotKeyForSubscriber: ', riotKeyHex);
+    const riotKeyBytes = Buffer.from(riotKeyHex.slice(2), 'hex');
+    const subscriberRiotKey = riotKeyBytes.toString('hex');
+    console.log('Riot Key Hex: ', riotKeyHex);
+    console.log('Riot Key Bytes: ', riotKeyBytes);
+    console.log('Subscriber Riot Key: ', subscriberRiotKey);
 
-    // // const decrypted_data = data.map((item: any) => {
-    // //   const encryptedBuffer = Buffer.from(item.sensorValue, 'hex');
-    // //   console.log('Encrypted Buffer', encryptedBuffer);
-    // //   // Create AES ECB cipher
-    // //   const aesEcb = new aesjs.ModeOfOperation.ecb(riotKeyBytes);
+    setRiotKey(subscriberRiotKey);
+    setLoading(false);
 
-    // //   // Perform decryption
-    // //   const decryptedBytes = aesEcb.decrypt(encryptedBuffer);
-    // //   const decryptedText = decryptedBytes.toString('utf-8').replace(/\0+$/, ''); // Remove null padding
-    // //   // Unhexlify decrypted text
-    // //   const unhexlifiedText = Buffer.from(decryptedText, 'hex');
-    // //   console.log(decryptedText, decryptedBytes);
+    const decrypted_data = data.map((item: any) => {
+      const encryptedBuffer = Buffer.from(item.sensorValue, 'hex');
+      console.log('Encrypted Buffer', encryptedBuffer);
+      // Create AES ECB cipher
+      const aesEcb = new aesjs.ModeOfOperation.ecb(riotKeyBytes);
 
-    // //   item.sensorValue = unhexlifiedText;
-    // //   return item;
-    // // });
-    // setData(decrypted_data);
-    // console.log(decrypted_data);
+      // Perform decryption
+      const decryptedBytes = aesEcb.decrypt(encryptedBuffer);
+      const decryptedText = decryptedBytes.toString('utf-8').replace(/\0+$/, ''); // Remove null padding
+      // Unhexlify decrypted text
+      const unhexlifiedText = Buffer.from(decryptedText, 'hex');
+      console.log(decryptedText, decryptedBytes);
+
+      item.sensorValue = unhexlifiedText;
+      return item;
+    });
+    setData(decrypted_data);
+    console.log(decrypted_data);
   }
 
   return (
@@ -224,19 +218,21 @@ const ViewDataPage = () => {
               {chain.id == 80001 ? 'Obtained Riot Key' : 'Riot Key in ' + chain?.name}
             </Text>
             <Text mt="20px" mb="8px" fontWeight={'bold'} fontSize={'2xl'}>
-              {chain.id == 80001
-                ? mumbaiRiotKey == '0x0000000000000000000000000000000000000000000000000000000000000000' ||
-                  mumbaiRiotKey == undefined
+              {JSON.stringify(
+                chain.id == 80001
+                  ? mumbaiRiotKey == '0x0000000000000000000000000000000000000000000000000000000000000000' ||
+                    mumbaiRiotKey == undefined
+                    ? 'Fetching...'
+                    : mumbaiRiotKey == '0x0000000000000000000000000000000000000000000000000000000000000001'
+                    ? "You don't own the device"
+                    : mumbaiRiotKey
+                  : crossChainRiotKey == '0x0000000000000000000000000000000000000000000000000000000000000000' ||
+                    crossChainRiotKey == undefined
                   ? 'Fetching...'
-                  : mumbaiRiotKey == '0x0000000000000000000000000000000000000000000000000000000000000001'
+                  : crossChainRiotKey == '0x0000000000000000000000000000000000000000000000000000000000000001'
                   ? "You don't own the device"
-                  : mumbaiRiotKey
-                : crossChainRiotKey == '0x0000000000000000000000000000000000000000000000000000000000000000' ||
-                  crossChainRiotKey == undefined
-                ? 'Fetching...'
-                : crossChainRiotKey == '0x0000000000000000000000000000000000000000000000000000000000000001'
-                ? "You don't own the device"
-                : crossChainRiotKey}
+                  : crossChainRiotKey,
+              )}
             </Text>
             <Box mt={5} mb={3}>
               <hr />

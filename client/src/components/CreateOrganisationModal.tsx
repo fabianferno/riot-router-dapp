@@ -107,7 +107,7 @@ const CreateOrganisationModal = ({ isOpen, onClose }: { isOpen: boolean; onClose
               <strong>Token Ingredients</strong>
             </Text>
             <div>
-              <Button colorScheme="gray" mx={3} disabled={true}>
+              <Button colorScheme="gray" mx={3} isDisabled={true}>
                 Create Fee : 0 tMATIC
               </Button>
               <Button colorScheme="red" onClick={onClose}>
