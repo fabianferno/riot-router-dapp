@@ -46,6 +46,19 @@ Device Registration Module: The Device Registration Module is responsible for re
 
 Encryption/Decryption Module: The encryption/decryption module is responsible for securing the IoT sensor data before it is stored in the data storage microservice. Fernet symmetric encryption is used for encryption, which provides a high level of security and speed.
 
+## Deployments
+
+Polygon Mumbai - **0x6396E6523D2952c9601809f7e6D3f7d046f0b495**
+
+Goerli Testnet - **0x9286D0225A60d02A1589982f1e2a453c65B67819**
+
+Base Testnet - **0xf04a238705B726Bcb1eeC39d8B7529944376C6c3**
+
+Scroll Testnet - **0x618Aa0e9ADa7eee7F665f9e407e7733F94f727dF**
+
+Arbitrum Testnet - **0xf04a238705B726Bcb1eeC39d8B7529944376C6c3**
+
+Avalanche Fuji Testnet - **0x769B092250D57fa70d8553057B24efF846CCc2b2**
 
 ## BUIDLERS
 **@fabianferno
