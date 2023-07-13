@@ -176,7 +176,7 @@ const Dashboard = () => {
                       alert('Please switch to Mumbai Testnet to transfer ownership ');
                     } else {
                       setShowTransfersModal(true);
-                      setSelectedDevice(device.deviceId);
+                      setSelectedDevice(device.tokenId);
                     }
                   }}
                 >
@@ -221,8 +221,8 @@ const Dashboard = () => {
         onClose={() => {
           setShowTransfersModal(false);
         }}
-        deviceId={selectedDevice}
-        organisationContractAddress={organisations && organisations[parseInt(selected) - 1]?.address}
+        tokenId={selectedDevice}
+        organisationId={selectedOrganisation.id}
       />
       <CreateOrganisationModal
         isOpen={showCreateOrganisation}

@@ -14,28 +14,42 @@ import {
   SlideFade,
   Text,
 } from '@chakra-ui/react';
-import React, { useState } from 'react';
-import { useAccount } from 'wagmi';
+import React, { useEffect, useState } from 'react';
+import { useAccount, useContractWrite } from 'wagmi';
+import { polygonABI, polygonAddress } from 'utils/constants';
 
 const TransferDeviceModal = ({
-  deviceId,
-  organisationContractAddress,
+  tokenId,
+  organisationId,
   isOpen,
   onClose,
 }: {
-  deviceId: string;
-  organisationContractAddress: string;
+  tokenId: string;
+  organisationId: string;
   isOpen: boolean;
   onClose: () => void;
 }) => {
   const { address } = useAccount();
   const [showNotification, setShowNotification] = useState(false);
   const [subscriber, setSubscriber] = useState('');
-
+  const [sessionSalt, setSessionSalt] = useState('');
   const [status, setStatus] = useState('');
   const closeNotification = () => {
     setShowNotification(false);
   };
+  const { writeAsync: changeSubscriber } = useContractWrite({
+    address: polygonAddress,
+    abi: polygonABI,
+    functionName: 'setSubscriberAddress',
+    args: [tokenId, organisationId, subscriber, sessionSalt.slice(0, -32)],
+  });
+
+  useEffect(() => {
+    (async function () {
+      const { randomness } = await getSessionSalt();
+      setSessionSalt(randomness);
+    })();
+  }, []);
   return (
     <div className={`fixed inset-0 flex items-center justify-center z-50 ${isOpen ? 'visible' : 'hidden'}`}>
       <div className="fixed inset-0 bg-gray-500 opacity-30"></div>
@@ -52,7 +66,7 @@ const TransferDeviceModal = ({
               onChange={(e) => {
                 setSubscriber(e.target.value);
               }}
-              placeholder="Enter the device address"
+              placeholder="Enter the new subscriber address"
               value={subscriber}
             />
           </div>
@@ -73,27 +87,12 @@ const TransferDeviceModal = ({
                 onClick={async () => {
                   setStatus('Waiting for Confirmation...');
                   setShowNotification(true);
-                  const { randomness } = await getSessionSalt();
-                  // let response = await contractCall(
-                  //   organisationContractAddress,
-                  //   currentAccount,
-                  //   organisationABI,
-                  //   [deviceId, subscriber, '0x' + randomness],
-                  //   0,
-                  //   'setSubscriberAddress(address,address,bytes32)',
-                  //   false,
-                  // );
-                  // if (response == 'Execution Complete') {
-                  //   setStatus('Processing Transaction...');
-                  //   setShowNotification(true);
-                  //   onClose();
-                  //   setInterval(() => {
-                  //     setStatus(`Device Subscriber changed to\n ${subscriber}}`);
-                  //     setShowNotification(true);
-                  //   }, 15000);
-                  // } else {
-                  //   setStatus('Transaction Failed or Cancelled');
-                  // }
+                  try {
+                    await changeSubscriber();
+                    setStatus('Transaction sent!');
+                  } catch (e) {
+                    setStatus('Transaction failed!');
+                  }
                 }}
               >
                 Set Subscriber Address
