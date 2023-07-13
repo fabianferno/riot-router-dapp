@@ -15,13 +15,15 @@ import {
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { convertObjectToFile, getUploadToken } from 'utils';
-import { clientAddress, protocolABI, protocolAddress } from './metamask/lib/constants';
-import contractCall from './metamask/lib/contract-call';
+import { polygonABI, polygonAddress } from '../utils/constants';
+// import contractCall from './metamask/lib/contract-call';
 import { upload } from '@spheron/browser-upload';
+import { useAccount, useContractWrite } from 'wagmi';
 
 const CreateOrganisationModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
-  const { currentAccount } = useSelector((state: any) => state.metamask);
+  const { address } = useAccount();
   const [showNotification, setShowNotification] = useState(false);
+  const [actionState, setActionState] = useState(0);
   const [name, setName] = useState('');
   const [symbol, setSymbol] = useState('');
   const [emoji, setEmoji] = useState('');
@@ -32,13 +34,12 @@ const CreateOrganisationModal = ({ isOpen, onClose }: { isOpen: boolean; onClose
   const closeNotification = () => {
     setShowNotification(false);
   };
-
-  useEffect(() => {
-    (async function () {
-      let responseFee = await contractCall(protocolAddress, currentAccount, protocolABI, [], 0, 'getCreateFee()', true);
-      setFee(parseInt(responseFee.toString()));
-    });
-  }, []);
+  const { isSuccess, writeAsync: registerOrganisation } = useContractWrite({
+    address: polygonAddress,
+    abi: polygonABI,
+    functionName: 'registerOrganisation',
+    args: [name, symbol, storedMetadataURI],
+  });
 
   return (
     <div className={`fixed inset-0 flex items-center justify-center z-50 ${isOpen ? 'visible' : 'hidden'}`}>
@@ -107,7 +108,7 @@ const CreateOrganisationModal = ({ isOpen, onClose }: { isOpen: boolean; onClose
             </Text>
             <div>
               <Button colorScheme="gray" mx={3} disabled={true}>
-                Create Fee : {fee} tFIL
+                Create Fee : 0 tMATIC
               </Button>
               <Button colorScheme="red" onClick={onClose}>
                 ❌ CLOSE
@@ -118,56 +119,52 @@ const CreateOrganisationModal = ({ isOpen, onClose }: { isOpen: boolean; onClose
                 variant="outline"
                 isDisabled={name == '' || symbol == '' || emoji == '' || description == ''}
                 onClick={async () => {
-                  let metadataUri;
-                  if (storedMetadataURI == '') {
-                    setStatus('Uploading Metadata to IPFS with Spheron...');
-                    setShowNotification(true);
-                    let currentlyUploaded = 0;
-                    const storageToken = await getUploadToken();
-                    console.log('Received Storage Token');
-                    console.log(storageToken);
-                    const { cid } = await upload(
-                      [convertObjectToFile({ name, symbol, emoji, description }, 'metadata.json')],
-                      {
-                        token: storageToken,
-                        onChunkUploaded(uploadedSize, totalSize) {
-                          currentlyUploaded += uploadedSize;
-                          console.log(`Uploaded ${currentlyUploaded} of ${totalSize} Bytes.`);
-                        },
-                      },
-                    );
-                    metadataUri = `https://ipfs.io/ipfs/${cid}/metadata.json`;
-                    setStoredMetadataURI(metadataUri);
-                  } else {
-                    metadataUri = storedMetadataURI;
-                  }
+                  if (actionState == 0) {
+                    let metadataUri;
 
-                  // let metadataUri = 'https://ipfs.io/ipfs/bafybeiflby3whlpmbxuvmobp7fqsrhrbhylpn2cxgvk3lfn4vsib5b3moq/';
-                  setStatus('Waiting for Confirmation...');
-
-                  let response = await contractCall(
-                    protocolAddress,
-                    currentAccount,
-                    protocolABI,
-                    [name, symbol, metadataUri, clientAddress],
-                    0,
-                    'registerOrganisation(string,string,string,address)',
-                    false,
-                  );
-                  if (response == 'Execution Complete') {
-                    setStatus('Processing Transaction...');
-                    setShowNotification(true);
-                    onClose();
-                    setInterval(() => {
-                      setStatus(`Successfully Created Organisation \n ${name}}`);
+                    if (storedMetadataURI == '') {
+                      setStatus('Uploading Metadata to IPFS with Spheron...');
                       setShowNotification(true);
-                    }, 15000);
+                      let currentlyUploaded = 0;
+                      const storageToken = await getUploadToken();
+                      console.log('Received Storage Token');
+                      console.log(storageToken);
+                      const { cid } = await upload(
+                        [convertObjectToFile({ name, symbol, emoji, description }, 'metadata.json')],
+                        {
+                          token: storageToken,
+                          onChunkUploaded(uploadedSize, totalSize) {
+                            currentlyUploaded += uploadedSize;
+                            console.log(`Uploaded ${currentlyUploaded} of ${totalSize} Bytes.`);
+                          },
+                        },
+                      );
+                      metadataUri = `https://ipfs.io/ipfs/${cid}/metadata.json`;
+                      console.log(metadataUri);
+                    } else {
+                      metadataUri = storedMetadataURI;
+                    }
+                    setStoredMetadataURI(metadataUri);
+                    setActionState(1);
                   } else {
-                    setStatus('Transaction Failed or Cancelled');
+                    console.log(storedMetadataURI);
+                    setStatus('Waiting for Confirmation...');
+                    try {
+                      await registerOrganisation();
+                      setStatus('Successfully Created Organisation');
+                      setShowNotification(true);
+                      onClose();
+                      setInterval(() => {
+                        setStatus(`Successfully Created Organisation \n ${name}}`);
+                        setShowNotification(true);
+                      }, 15000);
+                    } catch (e) {
+                      setStatus('Transaction Failed or Cancelled');
+                    }
                   }
                 }}
               >
-                Create organisation
+                {actionState == 0 ? 'Store data in IPFS' : 'Create organisation'}
               </Button>
             </div>
           </Flex>

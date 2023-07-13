@@ -12,92 +12,57 @@ import {
   Image,
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
 import CreateDeviceModal from './CreateDeviceModal';
 import CreateOrganisationModal from './CreateOrganisationModal';
-import { organisationABI, protocolABI, protocolAddress } from './metamask/lib/constants';
-import contractCall from './metamask/lib/contract-call';
+import { polygonABI, deployments, generalABI, polygonAddress } from '../utils/constants';
 import ViewData from '../pages/view-data';
 import TransferDeviceModal from './TransferDeviceModal';
+import { useAccount, useContractRead, useNetwork } from 'wagmi';
+import TransferCrossChainModal from './TransferCrossChainModal';
 
 const Dashboard = () => {
   const [showTransfersModal, setShowTransfersModal] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState<any>(null);
-
-  const { currentAccount } = useSelector((state: any) => state.metamask);
-
+  const { address } = useAccount();
+  const { chain } = useNetwork();
+  const [description, setDescription] = useState('');
+  const [selectedOrganisation, setSelectedOrganisation] = useState({});
   const [selected, setSelected] = useState('0');
   const [uploadToken, setUploadToken] = useState(null);
   const [showCreateOrganisation, setShowCreateOrganisation] = useState(false);
   const [showCreateDeviceModal, setShowCreateDeviceModal] = useState(false);
-  const [organisations, setOrganisations] = useState<any>([]);
-  const [devices, setDevices] = useState([]);
+  const { data: organisations } = useContractRead({
+    address: polygonAddress,
+    abi: polygonABI,
+    functionName: 'getOrganisations',
+    args: [address],
+    chainId: 80001,
+  });
 
+  const { data: devices } = useContractRead({
+    address: polygonAddress,
+    abi: polygonABI,
+    functionName: 'getOrganisationDevices',
+    args: [selectedOrganisation?.id],
+    chainId: 80001,
+  });
   useEffect(() => {
-    (async function () {
-      if (selected != '0') {
-        const _devices = await contractCall(
-          organisations[parseInt(selected) - 1]?.address,
-          currentAccount,
-          organisationABI,
-          [],
-          0,
-          'getDevices()',
-          true,
-        );
-        setDevices(_devices);
-        let modifiedOrganisations = organisations.map((org: Object, index: number) => {
-          if (index == parseInt(selected) - 1) {
-            return { ...org, description: 'This is so awesome!' };
-          }
-          return org;
-        });
-      }
-    })();
-  }, [selected]);
-  useEffect(() => {
-    (async function () {
-      const _organisations = await contractCall(
-        protocolAddress,
-        currentAccount,
-        protocolABI,
-        [],
-        0,
-        'getOrganisations()',
-        true,
-      );
-      console.log(_organisations);
-      if (_organisations.length > 0) {
-        let formattedOrganisations: any = [];
-        for (let i = 0; i < _organisations.length; i++) {
-          // const fetchedDescription = await fetch(_organisations[i].metadata + '/metadata.json');
-          // const { description } = await fetchedDescription.json();
-          formattedOrganisations.push({
-            name: _organisations[i].name,
-            id: (i + 1).toString(),
-            address: _organisations[i].organisationContractAddress,
-            symbol: _organisations[i].symbol,
-            // description: description,
-            creator: _organisations[i].creator,
-          });
-        }
-        console.log('Organisations: ', formattedOrganisations);
-        setOrganisations(formattedOrganisations);
-        setSelected('1');
-        const _devices = await contractCall(
-          formattedOrganisations[0]?.address,
-          currentAccount,
-          organisationABI,
-          [],
-          0,
-          'getDevices()',
-          true,
-        );
+    if (organisations && organisations.length > 0) {
+      setSelectedOrganisation(organisations[0]);
+      setSelected('1');
+    }
 
-        setDevices(_devices);
-      }
-    })();
+    console.log('Devices');
+    console.log(devices);
   }, []);
+
+  useEffect(() => {
+    if (selectedOrganisation != {}) {
+      fetch(selectedOrganisation.metadata)
+        .then((res) => res.json())
+        .then((res) => setDescription(res.description));
+    }
+  }, [selected]);
   return (
     <>
       <Box fontSize="3xl" fontWeight={'bold'} marginBottom={'20px'}>
@@ -113,23 +78,27 @@ const Dashboard = () => {
             padding="10px"
             borderRadius={'md'}
           >
-            {organisations.map((org: any) => (
-              <Box
-                as="button"
-                h="40px"
-                p="2"
-                textAlign={'center'}
-                bg={selected == org.id ? 'gray.200' : 'gray.800'}
-                borderRadius={'md'}
-                fontWeight={'medium'}
-                textColor={selected == org.id ? 'black' : 'white'}
-                alignItems="center"
-                justifyContent={'center'}
-                onClick={() => setSelected(org.id)}
-              >
-                {`${org.name} | ${org.symbol}`}
-              </Box>
-            ))}
+            {organisations &&
+              organisations.map((org: any) => (
+                <Box
+                  as="button"
+                  h="40px"
+                  p="2"
+                  textAlign={'center'}
+                  bg={selected == parseInt(org.id) + 1 ? 'gray.200' : 'gray.800'}
+                  borderRadius={'md'}
+                  fontWeight={'medium'}
+                  textColor={selected == parseInt(org.id) + 1 ? 'black' : 'white'}
+                  alignItems="center"
+                  justifyContent={'center'}
+                  onClick={() => {
+                    setSelected(parseInt(org.id) + 1);
+                    setSelectedOrganisation(org);
+                  }}
+                >
+                  {`${org.name} | ${org.symbol}`}
+                </Box>
+              ))}
             <Box
               as="button"
               h="40px"
@@ -143,8 +112,12 @@ const Dashboard = () => {
               alignItems="center"
               justifyContent={'center'}
               onClick={() => {
-                // Create Organisation
-                setShowCreateOrganisation(true);
+                if (chain?.id != 80001) {
+                  alert('Please switch to Mumbai Testnet to create an organisation');
+                } else {
+                  // Create Organisation
+                  setShowCreateOrganisation(true);
+                }
               }}
             >
               {'➕ Create'}
@@ -155,21 +128,27 @@ const Dashboard = () => {
           <Flex>
             <Text fontSize="3xl" fontWeight={'bold'} margin={'20px'}>
               {selected != '0' &&
-                `${organisations[parseInt(selected) - 1].name} | ${organisations[parseInt(selected) - 1].symbol}`}
+                `${selectedOrganisation != {} && selectedOrganisation.name} | ${
+                  selectedOrganisation != {} && selectedOrganisation.symbol
+                }`}
             </Text>
             <Spacer />
             <Button
               margin={'20px'}
               disabled={selected == '0'}
               onClick={() => {
-                setShowCreateDeviceModal(true);
+                if (chain?.id != 80001) {
+                  alert('Please switch to Mumbai Testnet to create a device');
+                } else {
+                  setShowCreateDeviceModal(true);
+                }
               }}
             >
               ➕ Create Device
             </Button>
           </Flex>
           <Divider marginBottom={'20px'} borderColor="gray.900" />
-          <Text margin={'20px'}>{selected != '0' && organisations[parseInt(selected) - 1].description}</Text>
+          <Text margin={'20px'}>{selected != '0' && selectedOrganisation != {} && description}</Text>
         </GridItem>
 
         <GridItem colSpan={2} rowSpan={4} bg="#141214" borderRadius={'md'} marginBottom={'20px'}>
@@ -178,14 +157,10 @@ const Dashboard = () => {
           </Text>
           <Divider marginBottom={'20px'} borderColor="gray.900" />
           <VStack spacing={2} align="stretch" padding="10px" borderRadius={'md'}>
-            {/* {devices.length > 0 ? (
+            {devices != undefined && devices.length > 0 ? (
               devices.map((device: any, index) => (
                 <Grid
                   key={index}
-                  onClick={() => {
-                    setShowTransfersModal(true);
-                    setSelectedDevice(device.deviceId);
-                  }}
                   templateRows="repeat(2, 1fr)"
                   templateColumns="repeat(4, 1fr)"
                   as="button"
@@ -196,7 +171,10 @@ const Dashboard = () => {
                   fontWeight={'medium'}
                   textColor={'white'}
                   _hover={{ bg: 'gray.200', textColor: 'black' }}
-                  // onClick={() => setSelected(org.id)}
+                  onClick={() => {
+                    setShowTransfersModal(true);
+                    setSelectedDevice(device.deviceId);
+                  }}
                 >
                   <GridItem colSpan={1} rowSpan={2}>
                     <Image src="https://picsum.photos/100" alt={device.subscriber} />
@@ -221,7 +199,7 @@ const Dashboard = () => {
               ))
             ) : (
               <Text margin={'100px'}>No Devices Yet!</Text>
-            )} */}
+            )}
           </VStack>
         </GridItem>
         <GridItem colSpan={2} rowSpan={4} bg="#141214" borderRadius={'md'} marginBottom={'20px'}>
@@ -230,7 +208,7 @@ const Dashboard = () => {
           </Text>
           <Divider marginBottom={'20px'} borderColor="gray.900" />
           <VStack spacing={2} align="stretch" padding="10px" borderRadius={'md'}>
-            {devices.length > 0 ? <ViewData /> : <Text margin={'100px'}>No Data Yet!</Text>}
+            {devices && devices.length > 0 ? <ViewData /> : <Text margin={'100px'}>No Data Yet!</Text>}
           </VStack>
         </GridItem>
       </Grid>
@@ -240,7 +218,7 @@ const Dashboard = () => {
           setShowTransfersModal(false);
         }}
         deviceId={selectedDevice}
-        organisationContractAddress={organisations[parseInt(selected) - 1]?.address}
+        organisationContractAddress={organisations && organisations[parseInt(selected) - 1]?.address}
       />
       <CreateOrganisationModal
         isOpen={showCreateOrganisation}
@@ -248,13 +226,14 @@ const Dashboard = () => {
           setShowCreateOrganisation(false);
         }}
       />
-      {organisations.length > 0 && (
+      {organisations != undefined && organisations.length > 0 && (
         <CreateDeviceModal
           isOpen={showCreateDeviceModal}
+          organisationId={selectedOrganisation.id}
           onClose={() => {
             setShowCreateDeviceModal(false);
           }}
-          organisationAddress={organisations[parseInt(selected) - 1].address}
+          // organisationAddress={organisations && organisations[parseInt(selected) - 1].address}
         />
       )}
     </>

@@ -4,21 +4,21 @@ import { Footer, Header } from 'components/modules';
 import Head from 'next/head';
 import { useColorModeValue } from '@chakra-ui/react';
 import { EmbedSDK } from '@pushprotocol/uiembed';
-import { useSelector } from 'react-redux';
+import { useAccount } from 'wagmi';
 
 const Default: FC<{ children: ReactNode; pageName: string }> = ({ children, pageName }) => {
-  const { currentAccount } = useSelector((state: any) => state.metamask);
+  const { address } = useAccount();
 
   const bgColor = useColorModeValue('blackAlpha.200', 'blackAlpha.500');
   // const textColor = useColorModeValue("#000000", "#FFFFFF");
   useEffect(() => {
-    if (currentAccount) {
+    if (address) {
       // 'your connected wallet address'
       EmbedSDK.init({
         headerText: 'Riot Alerts - powered by Push', // optional
         targetID: 'sdk-trigger-id', // mandatory
         appName: 'the-riot-protocol', // mandatory
-        user: currentAccount, // mandatory
+        user: address, // mandatory
         chainId: 314159, // mandatory
         viewOptions: {
           type: 'sidebar', // optional [default: 'sidebar', 'modal']

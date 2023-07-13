@@ -1,19 +1,25 @@
 import Dashboard from 'components/Dashboard';
 import { Default } from 'components/layouts/Default';
+import NoSSR from 'components/NoSSR';
 import { Home } from 'components/templates/home';
 import type { NextPage } from 'next';
 import { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { luniverseActions } from 'store/luniverseSlice';
+import { useAccount } from 'wagmi';
 
 const HomePage: NextPage = () => {
-  const { accessToken } = useSelector((state: any) => state.luniverse);
-  const { currentAccount } = useSelector((state: any) => state.metamask);
-  const dispatch = useDispatch();
-  useEffect(() => {
-    (async function () {})();
-  }, []);
-  return <Default pageName="Home">{currentAccount != '' ? <Dashboard /> : <Home />}</Default>;
+  const { address } = useAccount();
+
+  return (
+    <Default pageName="Home">
+      {address != '0x' ? (
+        <NoSSR>
+          <Dashboard />
+        </NoSSR>
+      ) : (
+        <Home />
+      )}
+    </Default>
+  );
 };
 
 export default HomePage;

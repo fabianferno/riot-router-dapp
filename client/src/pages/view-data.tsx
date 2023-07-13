@@ -16,9 +16,10 @@ import crypto from 'crypto';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
-import contractCall from '../components/metamask/lib/contract-call';
-import { RIOT_RPC_URL } from 'components/metamask/lib/constants';
-import { useSelector } from 'react-redux';
+// import contractCall from '../components/metamask/lib/contract-call';
+import { deployments, generalABI, polygonABI, polygonAddress, RIOT_RPC_URL } from 'utils/constants';
+import { useAccount, useContractRead, useContractWrite, useNetwork } from 'wagmi';
+import Image from 'next/image';
 
 const DatabaseTable = ({
   data,
@@ -55,14 +56,14 @@ const DatabaseTable = ({
 };
 
 const ViewDataPage = () => {
-  const [riotKey, setRiotKey] = useState('');
   const [data, setData] = useState<any>({});
   const [loading, setLoading] = useState(true);
-
+  const [tokenId, setTokenId] = useState('');
   const [deviceId, setDeviceId] = useState('');
 
-  const { currentAccount } = useSelector((state: any) => state.metamask);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { chain } = useNetwork();
+  const { address } = useAccount();
   useEffect(() => {
     // Make a axios get call
     (async () => {
@@ -79,6 +80,28 @@ const ViewDataPage = () => {
         });
     })();
   }, []);
+  const { data: mumbaiRiotKey } = useContractRead({
+    address: polygonAddress,
+    abi: polygonABI,
+    functionName: 'generateRiotKeyForSubscriber',
+    args: [tokenId],
+  });
+  const { data: crossChainRiotKey } = useContractRead({
+    address: deployments[parseInt(chain.id.toString())],
+    abi: generalABI,
+    functionName: 'getLatestRiotKey',
+    args: [tokenId],
+  });
+  const { writeAsync: getRiotKeyCrossChain } = useContractWrite({
+    address: deployments[parseInt(chain.id.toString())],
+    abi: generalABI,
+    functionName: 'transferCrossChain',
+    args: [
+      '80001',
+      [tokenId, address],
+      '0x00000000000186a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+    ],
+  });
 
   function getCipherFromKey(riot_key_hex: string) {
     // Convert the hex key string to bytes
@@ -99,11 +122,16 @@ const ViewDataPage = () => {
     decrypted_sensor_value = decrypted_sensor_value.toString('utf-8');
     return decrypted_sensor_value;
   }
+  useEffect(() => {
+    console.log(crossChainRiotKey);
+  }, []);
 
   async function DecryptData() {
     setLoading(true);
     console.log('Device ID: ', deviceId);
-
+    if (chain.id != 80001) {
+    } else {
+    }
     // const riotKeyHex = await contractCall(
     //   zkEVMContractAddress,
     //   currentAccount,
@@ -155,6 +183,12 @@ const ViewDataPage = () => {
           <ModalHeader>View Data</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
+            {chain?.id != 80001 && (
+              <div className="flex justify-center">
+                <p className="my-auto font-semibold text-xl">Powered by &nbsp;&nbsp;</p>
+                <Image className="rounded-lg" src="/router.png" width={100} height={100} alt={'Router Protocol'} />
+              </div>
+            )}
             <div>
               <Text mt="20px" mb="8px">
                 Device ID
@@ -164,14 +198,46 @@ const ViewDataPage = () => {
                   onChange={(e) => {
                     setDeviceId(e.target.value);
                   }}
+                  value={deviceId}
                   placeholder="Enter the device address"
                 />
-                <Button colorScheme="teal" size="md" onClick={DecryptData}>
-                  Decrypt Device
-                </Button>
               </Flex>
             </div>
-
+            <div>
+              <Text mt="20px" mb="8px">
+                Token Id
+              </Text>
+              <Flex>
+                <Input
+                  onChange={(e) => {
+                    setTokenId(e.target.value);
+                  }}
+                  value={tokenId}
+                  placeholder="Enter the token Id of your device"
+                />
+              </Flex>
+            </div>
+            <Button my={'4'} colorScheme="teal" size="md" onClick={DecryptData}>
+              Decrypt Device
+            </Button>
+            <Text mt="20px" mb="8px" fontSize={'lg'} fontWeight={'semibold'}>
+              {chain.id == 80001 ? 'Obtained Riot Key' : 'Riot Key in ' + chain?.name}
+            </Text>
+            <Text mt="20px" mb="8px" fontWeight={'bold'} fontSize={'2xl'}>
+              {chain.id == 80001
+                ? mumbaiRiotKey == '0x0000000000000000000000000000000000000000000000000000000000000000' ||
+                  mumbaiRiotKey == undefined
+                  ? 'Fetching...'
+                  : mumbaiRiotKey == '0x0000000000000000000000000000000000000000000000000000000000000001'
+                  ? "You don't own the device"
+                  : mumbaiRiotKey
+                : crossChainRiotKey == '0x0000000000000000000000000000000000000000000000000000000000000000' ||
+                  crossChainRiotKey == undefined
+                ? 'Fetching...'
+                : crossChainRiotKey == '0x0000000000000000000000000000000000000000000000000000000000000001'
+                ? "You don't own the device"
+                : crossChainRiotKey}
+            </Text>
             <Box mt={5} mb={3}>
               <hr />
             </Box>
