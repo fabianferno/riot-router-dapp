@@ -132,7 +132,7 @@ const ViewDataPage = () => {
     setLoading(true);
     console.log('Device ID: ', deviceId);
     if (chain.id != 80001) {
-      let riotKeyHex: any = mumbaiRiotKey;
+      let riotKeyHex: any = '0x5a911f280f2e9559073a4ce3fdad0c3b'; // Default Riot Key
       console.log('generateRiotKeyForSubscriber: ', riotKeyHex);
       const riotKeyBytes = Buffer.from(riotKeyHex.slice(2), 'hex');
       const subscriberRiotKey = riotKeyBytes.toString('hex');
