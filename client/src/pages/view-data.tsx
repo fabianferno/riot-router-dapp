@@ -57,6 +57,7 @@ const DatabaseTable = ({
 
 const ViewDataPage = () => {
   const [data, setData] = useState<any>({});
+  const [riotKey, setRiotKey] = useState('');
   const [loading, setLoading] = useState(true);
   const [tokenId, setTokenId] = useState('');
   const [deviceId, setDeviceId] = useState('');
@@ -81,7 +82,7 @@ const ViewDataPage = () => {
         });
     })();
   }, []);
-  const { data: mumbaiRiotKey } = useContractRead({
+  const { data: mumbaiRiotKey, refetch } = useContractRead({
     address: polygonAddress,
     abi: polygonABI,
     functionName: 'generateRiotKeyForSubscriber',
@@ -205,6 +206,8 @@ const ViewDataPage = () => {
                 <Input
                   onChange={(e) => {
                     setTokenId(e.target.value);
+                    refetch();
+                    console.log(mumbaiRiotKey);
                   }}
                   value={tokenId}
                   placeholder="Enter the token Id of your device"
@@ -225,10 +228,10 @@ const ViewDataPage = () => {
                     ? 'Fetching...'
                     : mumbaiRiotKey == '0x0000000000000000000000000000000000000000000000000000000000000001'
                     ? "You don't own the device"
-                    : mumbaiRiotKey
+                    : riotKey
                   : crossChainRiotKey == '0x0000000000000000000000000000000000000000000000000000000000000000' ||
                     crossChainRiotKey == undefined
-                  ? 'Fetching...'
+                  ? 'Yet To Fetch'
                   : crossChainRiotKey == '0x0000000000000000000000000000000000000000000000000000000000000001'
                   ? "You don't own the device"
                   : crossChainRiotKey,
