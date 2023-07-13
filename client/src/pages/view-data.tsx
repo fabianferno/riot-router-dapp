@@ -132,38 +132,38 @@ const ViewDataPage = () => {
     setLoading(true);
     console.log('Device ID: ', deviceId);
     if (chain.id != 80001) {
+      let riotKeyHex: any = mumbaiRiotKey;
+      console.log('generateRiotKeyForSubscriber: ', riotKeyHex);
+      const riotKeyBytes = Buffer.from(riotKeyHex.slice(2), 'hex');
+      const subscriberRiotKey = riotKeyBytes.toString('hex');
+      console.log('Riot Key Hex: ', riotKeyHex);
+      console.log('Riot Key Bytes: ', riotKeyBytes);
+      console.log('Subscriber Riot Key: ', subscriberRiotKey);
+
+      setRiotKey(subscriberRiotKey);
+      setLoading(false);
+
+      const decrypted_data = data.map((item: any) => {
+        const encryptedBuffer = Buffer.from(item.sensorValue, 'hex');
+        console.log('Encrypted Buffer', encryptedBuffer);
+        // Create AES ECB cipher
+        const aesEcb = new aesjs.ModeOfOperation.ecb(riotKeyBytes);
+
+        // Perform decryption
+        const decryptedBytes = aesEcb.decrypt(encryptedBuffer);
+        const decryptedText = decryptedBytes.toString('utf-8').replace(/\0+$/, ''); // Remove null padding
+        // Unhexlify decrypted text
+        const unhexlifiedText = Buffer.from(decryptedText, 'hex');
+        console.log(decryptedText, decryptedBytes);
+
+        item.sensorValue = unhexlifiedText;
+        return item;
+      });
+      setData(decrypted_data);
+      console.log(decrypted_data);
     } else {
+      await getRiotKeyCrossChain();
     }
-
-    let riotKeyHex: any = mumbaiRiotKey;
-    console.log('generateRiotKeyForSubscriber: ', riotKeyHex);
-    const riotKeyBytes = Buffer.from(riotKeyHex.slice(2), 'hex');
-    const subscriberRiotKey = riotKeyBytes.toString('hex');
-    console.log('Riot Key Hex: ', riotKeyHex);
-    console.log('Riot Key Bytes: ', riotKeyBytes);
-    console.log('Subscriber Riot Key: ', subscriberRiotKey);
-
-    setRiotKey(subscriberRiotKey);
-    setLoading(false);
-
-    const decrypted_data = data.map((item: any) => {
-      const encryptedBuffer = Buffer.from(item.sensorValue, 'hex');
-      console.log('Encrypted Buffer', encryptedBuffer);
-      // Create AES ECB cipher
-      const aesEcb = new aesjs.ModeOfOperation.ecb(riotKeyBytes);
-
-      // Perform decryption
-      const decryptedBytes = aesEcb.decrypt(encryptedBuffer);
-      const decryptedText = decryptedBytes.toString('utf-8').replace(/\0+$/, ''); // Remove null padding
-      // Unhexlify decrypted text
-      const unhexlifiedText = Buffer.from(decryptedText, 'hex');
-      console.log(decryptedText, decryptedBytes);
-
-      item.sensorValue = unhexlifiedText;
-      return item;
-    });
-    setData(decrypted_data);
-    console.log(decrypted_data);
   }
 
   return (
