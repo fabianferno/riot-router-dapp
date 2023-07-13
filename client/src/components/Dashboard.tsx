@@ -172,8 +172,12 @@ const Dashboard = () => {
                   textColor={'white'}
                   _hover={{ bg: 'gray.200', textColor: 'black' }}
                   onClick={() => {
-                    setShowTransfersModal(true);
-                    setSelectedDevice(device.deviceId);
+                    if (chain?.id != 80001) {
+                      alert('Please switch to Mumbai Testnet to transfer ownership ');
+                    } else {
+                      setShowTransfersModal(true);
+                      setSelectedDevice(device.deviceId);
+                    }
                   }}
                 >
                   <GridItem colSpan={1} rowSpan={2}>
