@@ -15,20 +15,19 @@ import { useEffect, useState } from 'react';
 import CreateDeviceModal from './CreateDeviceModal';
 import CreateOrganisationModal from './CreateOrganisationModal';
 import { polygonABI, deployments, generalABI, polygonAddress } from '../utils/constants';
-import ViewData from '../pages/view-data';
+// import ViewData from '../pages/view-data';
 import TransferDeviceModal from './TransferDeviceModal';
 import { useAccount, useContractRead, useNetwork } from 'wagmi';
-import TransferCrossChainModal from './TransferCrossChainModal';
 
 const Dashboard = () => {
-  const [showTransfersModal, setShowTransfersModal] = useState(false);
+  const [orgsData, setOrgsData] = useState<any>([]);
+  const [showTransfersModal, setShowTransfersModal] = useState<any>(false);
   const [selectedDevice, setSelectedDevice] = useState<any>(null);
   const { address } = useAccount();
   const { chain } = useNetwork();
-  const [description, setDescription] = useState('');
-  const [selectedOrganisation, setSelectedOrganisation] = useState({});
-  const [selected, setSelected] = useState('0');
-  const [uploadToken, setUploadToken] = useState(null);
+  const [description, setDescription] = useState<any>('');
+  const [selectedOrganisation, setSelectedOrganisation] = useState<any>({});
+  const [selected, setSelected] = useState<any>('0');
   const [showCreateOrganisation, setShowCreateOrganisation] = useState(false);
   const [showCreateDeviceModal, setShowCreateDeviceModal] = useState(false);
   const { data: organisations } = useContractRead({
@@ -47,8 +46,9 @@ const Dashboard = () => {
     chainId: 80001,
   });
   useEffect(() => {
-    if (organisations && organisations.length > 0) {
-      setSelectedOrganisation(organisations[0]);
+    setOrgsData(organisations);
+    if (organisations && Array(organisations).length > 0) {
+      setSelectedOrganisation(Array(organisations)[0]);
       setSelected('1');
     }
 
@@ -57,12 +57,13 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    if (selectedOrganisation != {}) {
+    if (selectedOrganisation && Object.keys(selectedOrganisation).length !== 0) {
       fetch(selectedOrganisation.metadata)
         .then((res) => res.json())
         .then((res) => setDescription(res.description));
     }
-  }, [selected]);
+  }, [selectedOrganisation]);
+
   return (
     <>
       <Box fontSize="3xl" fontWeight={'bold'} marginBottom={'20px'}>
@@ -79,8 +80,9 @@ const Dashboard = () => {
             borderRadius={'md'}
           >
             {organisations &&
-              organisations.map((org: any) => (
+              orgsData.map((org: any) => (
                 <Box
+                  key={org.id}
                   as="button"
                   h="40px"
                   p="2"
@@ -127,10 +129,10 @@ const Dashboard = () => {
         <GridItem h="200px" colSpan={4} rowSpan={1} bg="#141214" borderRadius={'md'} marginBottom={'20px'}>
           <Flex>
             <Text fontSize="3xl" fontWeight={'bold'} margin={'20px'}>
-              {selected != '0' &&
-                `${selectedOrganisation != {} && selectedOrganisation.name} | ${
-                  selectedOrganisation != {} && selectedOrganisation.symbol
-                }`}
+              {selected !== '0' &&
+                selectedOrganisation &&
+                Object.keys(selectedOrganisation).length !== 0 &&
+                `${selectedOrganisation.name} | ${selectedOrganisation.symbol}`}
             </Text>
             <Spacer />
             <Button
@@ -148,7 +150,9 @@ const Dashboard = () => {
             </Button>
           </Flex>
           <Divider marginBottom={'20px'} borderColor="gray.900" />
-          <Text margin={'20px'}>{selected != '0' && selectedOrganisation != {} && description}</Text>
+          <Text margin={'20px'}>
+            {selected !== '0' && selectedOrganisation && Object.keys(selectedOrganisation).length !== 0 && description}
+          </Text>
         </GridItem>
 
         <GridItem colSpan={2} rowSpan={4} bg="#141214" borderRadius={'md'} marginBottom={'20px'}>
@@ -157,8 +161,8 @@ const Dashboard = () => {
           </Text>
           <Divider marginBottom={'20px'} borderColor="gray.900" />
           <VStack spacing={2} align="stretch" padding="10px" borderRadius={'md'}>
-            {devices != undefined && devices.length > 0 ? (
-              devices.map((device: any, index) => (
+            {devices != undefined && Array(devices).length > 0 ? (
+              Array(devices).map((device: any, index) => (
                 <Grid
                   key={index}
                   templateRows="repeat(2, 1fr)"
@@ -212,7 +216,14 @@ const Dashboard = () => {
           </Text>
           <Divider marginBottom={'20px'} borderColor="gray.900" />
           <VStack spacing={2} align="stretch" padding="10px" borderRadius={'md'}>
-            {devices && devices.length > 0 ? <ViewData /> : <Text margin={'100px'}>No Data Yet!</Text>}
+            {devices && Array(devices).length > 0 ? (
+              <div>
+                {/* <ViewData />  */}
+                <p>Data loading...</p>
+              </div>
+            ) : (
+              <Text margin={'100px'}>No Data Yet!</Text>
+            )}
           </VStack>
         </GridItem>
       </Grid>
@@ -230,7 +241,7 @@ const Dashboard = () => {
           setShowCreateOrganisation(false);
         }}
       />
-      {organisations != undefined && organisations.length > 0 && (
+      {organisations != undefined && Array(organisations).length > 0 && (
         <CreateDeviceModal
           isOpen={showCreateDeviceModal}
           organisationId={selectedOrganisation.id}

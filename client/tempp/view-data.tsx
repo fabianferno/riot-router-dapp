@@ -1,4 +1,3 @@
-import { Default } from 'components/layouts/Default';
 import { Button, Flex, Box, Text, Input, Progress, Table, Thead, Tbody, Tr, Th, Td } from '@chakra-ui/react';
 import {
   Modal,
@@ -16,7 +15,6 @@ import crypto from 'crypto';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
-// import contractCall from '../components/metamask/lib/contract-call';
 import { deployments, generalABI, polygonABI, polygonAddress, RIOT_RPC_URL } from 'utils/constants';
 import { useAccount, useContractRead, useContractWrite, useNetwork } from 'wagmi';
 import Image from 'next/image';
@@ -42,7 +40,7 @@ const DatabaseTable = ({
         </Tr>
       </Thead>
       <Tbody>
-        {data.map((row) => (
+        {data.map((row: any) => (
           <Tr key={row.id}>
             <Td>{row.id}</Td>
             <Td>{row.deviceId}</Td>
@@ -61,12 +59,14 @@ const ViewDataPage = () => {
   const [loading, setLoading] = useState(true);
   const [tokenId, setTokenId] = useState('');
   const [deviceId, setDeviceId] = useState('');
+  const [currentChain, setCurrentChain] = useState<any>(null);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { chain } = useNetwork();
   const { address } = useAccount();
 
   useEffect(() => {
+    setCurrentChain(chain);
     // Make a axios get call
     (async () => {
       await axios
@@ -89,13 +89,13 @@ const ViewDataPage = () => {
     args: [tokenId],
   });
   const { data: crossChainRiotKey } = useContractRead({
-    address: deployments[parseInt(chain.id.toString())],
+    address: deployments[parseInt(currentChain.id.toString())],
     abi: generalABI,
     functionName: 'getLatestRiotKey',
     args: [tokenId],
   });
   const { writeAsync: getRiotKeyCrossChain } = useContractWrite({
-    address: deployments[parseInt(chain.id.toString())],
+    address: deployments[parseInt(currentChain.id.toString())],
     abi: generalABI,
     functionName: 'transferCrossChain',
     args: [
@@ -131,7 +131,7 @@ const ViewDataPage = () => {
   async function DecryptData() {
     setLoading(true);
     console.log('Device ID: ', deviceId);
-    if (chain.id == 80001) {
+    if (currentChain.id == 80001) {
       let riotKeyHex: any = '0x5a911f280f2e9559073a4ce3fdad0c3b'; // Default Riot Key
       console.log('generateRiotKeyForSubscriber: ', riotKeyHex);
       const riotKeyBytes = Buffer.from(riotKeyHex.slice(2), 'hex');
@@ -178,7 +178,7 @@ const ViewDataPage = () => {
           <ModalHeader>View Data</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            {chain?.id != 80001 && (
+            {currentChain?.id != 80001 && (
               <div className="flex justify-center">
                 <p className="my-auto font-semibold text-xl">Powered by &nbsp;&nbsp;</p>
                 <Image className="rounded-lg" src="/router.png" width={100} height={100} alt={'Router Protocol'} />
@@ -218,11 +218,11 @@ const ViewDataPage = () => {
               Decrypt Device
             </Button>
             <Text mt="20px" mb="8px" fontSize={'lg'} fontWeight={'semibold'}>
-              {chain.id == 80001 ? 'Obtained Riot Key' : 'Riot Key in ' + chain?.name}
+              {currentChain.id == 80001 ? 'Obtained Riot Key' : 'Riot Key in ' + currentChain?.name}
             </Text>
             <Text mt="20px" mb="8px" fontWeight={'bold'} fontSize={'2xl'}>
               {JSON.stringify(
-                chain.id == 80001
+                currentChain.id == 80001
                   ? mumbaiRiotKey == '0x0000000000000000000000000000000000000000000000000000000000000000' ||
                     mumbaiRiotKey == undefined
                     ? 'Fetching...'

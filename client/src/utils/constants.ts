@@ -523,7 +523,7 @@ const polygonABI = [
     type: 'function',
   },
 ];
-const deployments = {
+const deployments: any = {
   421613: '0xf04a238705B726Bcb1eeC39d8B7529944376C6c3',
   5: '0x9286D0225A60d02A1589982f1e2a453c65B67819',
   534353: '0x618Aa0e9ADa7eee7F665f9e407e7733F94f727dF',

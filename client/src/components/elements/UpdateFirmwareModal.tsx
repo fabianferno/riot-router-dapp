@@ -1,5 +1,4 @@
 import {
-  Input,
   Button,
   Text,
   Textarea,
@@ -21,10 +20,9 @@ import {
   ModalBody,
 } from '@chakra-ui/react';
 import { ArrowDownIcon } from '@chakra-ui/icons';
-import contractCall from 'components/metamask/lib/contract-call';
 import React from 'react';
 import { useState } from 'react';
-import { RIOT_RPC_URL } from 'components/metamask/lib/constants';
+import { RIOT_RPC_URL } from '../../utils/constants';
 import { useSelector } from 'react-redux';
 
 const UpdateFirmwareModal = (props: { deviceId: string }) => {

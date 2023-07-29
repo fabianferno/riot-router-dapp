@@ -19,7 +19,7 @@ import crypto from 'crypto';
 
 import React, { useEffect, useState } from 'react';
 import { polygonABI, polygonAddress, riotDeviceImages, RIOT_RPC_URL } from '../utils/constants';
-import getIsDeviceIdMinted from 'utils/getIsDeviceMinted';
+
 import { getEllipsisTxt } from 'utils/format';
 import getSessionSalt from 'utils/getSessionSalt';
 import { convertObjectToFile, getUploadToken } from 'utils';
@@ -80,6 +80,9 @@ const CreateDeviceModal = ({
     args: [deviceId],
     chainId: 80001,
   });
+
+  // check if isDeviceMinted is truthy before using it
+  const isMinted = Boolean(isDeviceMinted);
 
   const { isSuccess, writeAsync: createDevice } = useContractWrite({
     address: polygonAddress,
@@ -308,7 +311,7 @@ const CreateDeviceModal = ({
                   <Text fontWeight="bold">
                     <Badge colorScheme="red">Token Id</Badge>
                   </Text>
-                  <Text fontSize="sm">{deviceTokenId && deviceTokenId.toString()}</Text>
+                  <Text fontSize="sm">{JSON.stringify(deviceTokenId && deviceTokenId.toString())}</Text>
                 </Box>
               </Flex>
             </SimpleGrid>
@@ -329,7 +332,7 @@ const CreateDeviceModal = ({
                   mx={6}
                   colorScheme="teal"
                   variant="outline"
-                  isDisabled={!allDataPresent() || isDeviceMinted}
+                  isDisabled={!allDataPresent() || isMinted}
                   onClick={async () => {
                     if (buttonAction == 0) {
                       setStatus('Uploading RiotNFT to IPFS...');
